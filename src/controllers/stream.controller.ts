@@ -47,7 +47,8 @@ export const createStream = async (req: AuthenticatedRequest, res: Response) => 
       id: stream.uid,
       title: stream.title,
       username: req.user.metroUsername,
-      WebRTC: stream.webRTCUrl
+      WebRTC: stream.webRTCUrl,
+      WebRTCPlayback: stream.webRTCPlaybackUrl
     });
   } catch (error: any) {
     console.error("=== ERROR CREANDO TRANSMISIÓN ===");
