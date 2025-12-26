@@ -145,7 +145,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/macbookpro/Downloads/api-streaming-main/dist/generated/prisma",
+      "value": "/Users/macbookpro/telemetro/api-streaming/dist/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -159,11 +159,12 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/macbookpro/Downloads/api-streaming-main/prisma/schema.prisma",
+    "sourceFilePath": "/Users/macbookpro/telemetro/api-streaming/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null
+    "rootEnvPath": null,
+    "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../prisma",
   "clientVersion": "6.17.0",

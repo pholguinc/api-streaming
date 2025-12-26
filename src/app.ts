@@ -12,7 +12,7 @@ app.use(express.json());
 // Configurar Swagger
 setupSwagger(app);
 
-app.use("/api/streams", streamRoutes);
+app.use("/api/streaming", streamRoutes);
 
 app.get("/", (_, res) => {
   res.send("Servidor Cloudflare WebRTC funcionando 🚀");

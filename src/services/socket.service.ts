@@ -40,11 +40,11 @@ export class SocketService {
         } catch (jsonError) {
           // Si falla, intentar arreglar claves sin comillas
           console.log("🔧 Intentando arreglar JSON con claves sin comillas...");
-          
+
           // Reemplazar claves sin comillas por claves con comillas
           const fixedJson = data.replace(/(\w+):/g, '"$1":');
           console.log("🔧 JSON corregido:", fixedJson);
-          
+
           return JSON.parse(fixedJson) as T;
         }
       }
@@ -140,12 +140,12 @@ export class SocketService {
         data: { status: "offline" },
       });
 
-        // Notificar a todos que el stream terminó por desconexión TCP
-        this.io.emit("stream_ended", {
-          streamUid,
-          message: "Stream finalizado: conexión TCP perdida",
-          reason: "tcp_disconnection"
-        });
+      // Notificar a todos que el stream terminó por desconexión TCP
+      this.io.emit("stream_ended", {
+        streamUid,
+        message: "Stream finalizado: conexión TCP perdida",
+        reason: "tcp_disconnection"
+      });
 
       console.log(`🧹 Stream huérfano limpiado: ${streamUid} (socket: ${socketId})`);
 
@@ -221,9 +221,14 @@ export class SocketService {
 
   private initializeSocketEvents(): void {
     this.io.on("connection", async (socket: AuthenticatedSocket) => {
-      console.log(
-        `✅ Cliente conectado: ${socket.id} | Usuario: ${socket.user?.displayName} | Rol: ${socket.user?.role}`
-      );
+      console.log(`\n${"=".repeat(60)}`);
+      console.log(`🎉 CONEXIÓN EXITOSA - Socket conectado correctamente`);
+      console.log(`   🆔 Socket ID: ${socket.id}`);
+      console.log(`   👤 Usuario: ${socket.user?.displayName}`);
+      console.log(`   📧 Username: @${socket.user?.metroUsername}`);
+      console.log(`   🎭 Rol: ${socket.user?.role}`);
+      console.log(`   ⏰ Hora: ${new Date().toISOString()}`);
+      console.log(`${"=".repeat(60)}\n`);
 
       // === FLUJO SIMPLIFICADO ===
 
@@ -556,13 +561,13 @@ export class SocketService {
 
       // Encontrar el socket del streamer para notificarle
       const streamerSocket = socketsInRoom.find((s: any) => s.isBroadcaster);
-      
+
       console.log(`🔍 DEBUG: Streamer socket encontrado:`, streamerSocket ? {
         id: streamerSocket.id,
         user: (streamerSocket as any).user?.displayName,
         isBroadcaster: (streamerSocket as any).isBroadcaster
       } : 'NO ENCONTRADO');
-      
+
       if (streamerSocket) {
         const notification = {
           streamUid,
@@ -578,7 +583,7 @@ export class SocketService {
           streamerName: (streamerSocket as any).user?.displayName,
           notification: notification
         });
-        
+
         streamerSocket.emit("viewer_update", notification);
         console.log(`✅ viewer_update enviado exitosamente`);
       } else {
@@ -635,7 +640,7 @@ export class SocketService {
       console.log(
         `👀 VIEWER DESCONECTADO - Removiendo de stream: ${watchingStream} | Usuario: ${socket.user?.displayName}`
       );
-      
+
       // Notificar automáticamente al streamer sobre la desconexión del viewer
       console.log(`🔍 DEBUG: Llamando notifyStreamerAboutViewers para DISCONNECT`);
       await this.notifyStreamerAboutViewers(watchingStream, 'left', {
@@ -647,10 +652,10 @@ export class SocketService {
         socketId: socket.id,
         reason: 'disconnected' // Marcar como desconexión abrupta
       });
-      
+
       delete (socket as any).watchingStream;
       delete (socket as any).isAutoViewer;
-      
+
       // ✅ ACTUALIZAR CONTADORES AUTOMÁTICAMENTE
       console.log(`🔍 DEBUG: Llamando scheduleBroadcastUpdate desde disconnect`);
       this.scheduleBroadcastUpdate();
@@ -745,7 +750,7 @@ export class SocketService {
       clearTimeout(this.broadcastTimeout);
       console.log(`🔍 DEBUG: Timeout anterior cancelado`);
     }
-    
+
     this.broadcastTimeout = setTimeout(async () => {
       console.log(`🔍 DEBUG: Ejecutando broadcastUpdatedStreamsList después del timeout`);
       await this.broadcastUpdatedStreamsList();
@@ -756,7 +761,7 @@ export class SocketService {
   private async broadcastUpdatedStreamsList(): Promise<void> {
     try {
       console.log(`🔄 Emitiendo streams-list a todos los clientes...`);
-      
+
       // Obtener todos los streams activos
       const activeStreams = await prisma.stream.findMany({
         where: { status: "active" },
@@ -797,8 +802,7 @@ export class SocketService {
       );
 
       console.log(
-        `🔄 ACTUALIZANDO CONTADORES: ${streamsWithViewers.length} streams con ${
-          streamsWithViewers[0]?.viewersCount || 0
+        `🔄 ACTUALIZANDO CONTADORES: ${streamsWithViewers.length} streams con ${streamsWithViewers[0]?.viewersCount || 0
         } viewers`
       );
 
@@ -820,36 +824,36 @@ export class SocketService {
   private async handleSendMessage(socket: AuthenticatedSocket, data: any): Promise<void> {
     try {
       console.log("🔍 DEBUG: Datos recibidos en handleSendMessage:", { data, type: typeof data });
-      
+
       // Parsear data usando la función utilitaria existente
       const parsedData = this.parseSocketData<{ streamUid: string; message: string }>(data, socket);
       if (!parsedData) {
         return; // Error ya manejado en parseSocketData
       }
-      
+
       const { streamUid, message } = parsedData;
-      
+
       // Validaciones adicionales
       if (!streamUid || typeof streamUid !== 'string') {
         console.log("❌ streamUid inválido detectado:", { streamUid, type: typeof streamUid });
-        socket.emit("error", { 
+        socket.emit("error", {
           event: "send-message",
-          message: "ID de stream inválido" 
+          message: "ID de stream inválido"
         });
         return;
       }
 
       if (!message || typeof message !== 'string' || message.trim() === "") {
         console.log("❌ Mensaje inválido detectado:", { message, type: typeof message });
-        socket.emit("error", { 
+        socket.emit("error", {
           event: "send-message",
-          message: "El mensaje no puede estar vacío" 
+          message: "El mensaje no puede estar vacío"
         });
         return;
       }
 
       const isBroadcaster = (socket as any).isBroadcaster || false;
-      
+
       console.log(`💬 ${socket.user?.displayName} (@${socket.user?.metroUsername}) ${isBroadcaster ? '🎥' : ''} en stream ${streamUid}: ${message}`);
 
       const messageData = {
@@ -871,15 +875,15 @@ export class SocketService {
       const socketsInRoom = await this.io.in(`stream-${streamUid}`).fetchSockets();
       console.log(`📢 Emitiendo new-message a room stream-${streamUid} para usuario: ${socket.user?.displayName}`);
       console.log(`📊 Sockets en room: ${socketsInRoom.length}`, socketsInRoom.map(s => s.id));
-      
+
       this.io.in(`stream-${streamUid}`).emit("new-message", messageData);
       console.log(`✅ new-message emitido exitosamente`);
 
     } catch (error) {
       console.error("❌ Error al enviar mensaje:", error);
-      socket.emit("error", { 
+      socket.emit("error", {
         event: "send-message",
-        message: "Error al enviar el mensaje" 
+        message: "Error al enviar el mensaje"
       });
     }
   }
@@ -890,7 +894,7 @@ export class SocketService {
   private handleTyping(socket: AuthenticatedSocket, data: { streamUid: string; isTyping: boolean }): void {
     try {
       const { streamUid, isTyping } = data;
-      
+
       socket.to(`stream-${streamUid}`).emit("user-typing", {
         user: {
           id: socket.user?.id,
