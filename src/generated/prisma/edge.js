@@ -145,7 +145,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/angel/Marketrix/cloudflare-webrtc-server/dist/generated/prisma",
+      "value": "/Users/macbookpro/telemetro/api-streaming/src/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -156,10 +156,14 @@ const config = {
         "fromEnvVar": null,
         "value": "darwin-arm64",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "debian-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/angel/Marketrix/cloudflare-webrtc-server/prisma/schema.prisma",
+    "sourceFilePath": "/Users/macbookpro/telemetro/api-streaming/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -182,8 +186,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../dist/generated/prisma\"\n}\n\ndatasource db {\n  provider          = \"mysql\"\n  url               = env(\"DATABASE_URL\")\n  shadowDatabaseUrl = env(\"SHADOW_DATABASE_URL\")\n}\n\nmodel Stream {\n  uid                      String   @id\n  title                    String\n  userId                   String\n  status                   String?  @default(\"offline\")\n  preferLowLatency         Boolean  @default(true)\n  deleteRecordingAfterDays Int?     @default(30)\n  recordingMode            String? // automatic, manual, etc.\n  webRTCUrl                String? // URL de publicación WebRTC\n  webRTCPlaybackUrl        String? // URL de reproducción WebRTC\n  createdAt                DateTime @default(now())\n  updatedAt                DateTime @updatedAt\n\n  // Información del streamer\n  displayName   String? // displayName del streamer\n  metroUsername String? // metroUsername del streamer\n}\n",
-  "inlineSchemaHash": "1cfa4095cce8d4bc4152adf7dd485b284d8c7093e6618bd804c656c051679311",
+  "inlineSchema": "generator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/generated/prisma\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider          = \"mysql\"\n  url               = env(\"DATABASE_URL\")\n  shadowDatabaseUrl = env(\"SHADOW_DATABASE_URL\")\n}\n\nmodel Stream {\n  uid                      String   @id\n  title                    String\n  userId                   String\n  status                   String?  @default(\"offline\")\n  preferLowLatency         Boolean  @default(true)\n  deleteRecordingAfterDays Int?     @default(30)\n  recordingMode            String? // automatic, manual, etc.\n  webRTCUrl                String? // URL de publicación WebRTC\n  webRTCPlaybackUrl        String? // URL de reproducción WebRTC\n  createdAt                DateTime @default(now())\n  updatedAt                DateTime @updatedAt\n\n  // Información del streamer\n  displayName   String? // displayName del streamer\n  metroUsername String? // metroUsername del streamer\n}\n",
+  "inlineSchemaHash": "f79fc34cf638a4fd80729b35f509f159ef513c98b0c82a58964c4977600c7ee3",
   "copyEngine": true
 }
 config.dirname = '/'

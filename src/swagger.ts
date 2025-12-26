@@ -169,7 +169,14 @@ const options: swaggerJsdoc.Options = {
       },
     ],
   },
-  apis: ["./src/routes/*.ts", "./src/controllers/*.ts"],
+  apis: [
+    process.env.NODE_ENV === "production" || __filename.endsWith(".js")
+      ? "./dist/routes/*.js"
+      : "./src/routes/*.ts",
+    process.env.NODE_ENV === "production" || __filename.endsWith(".js")
+      ? "./dist/controllers/*.js"
+      : "./src/controllers/*.ts",
+  ],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
