@@ -170,12 +170,10 @@ const options: swaggerJsdoc.Options = {
     ],
   },
   apis: [
-    process.env.NODE_ENV === "production" || __filename.endsWith(".js")
-      ? "./dist/routes/*.js"
-      : "./src/routes/*.ts",
-    process.env.NODE_ENV === "production" || __filename.endsWith(".js")
-      ? "./dist/controllers/*.js"
-      : "./src/controllers/*.ts",
+    "./src/routes/*.ts",
+    "./src/controllers/*.ts",
+    "./dist/routes/*.js",
+    "./dist/controllers/*.js"
   ],
 };
 
