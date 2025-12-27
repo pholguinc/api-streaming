@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { createStream, allStreams } from "../controllers/stream.controller";
 import { authenticate } from "../middlewares/auth.middleware";
-import { authorize } from "../middlewares/authorize.middleware";
+//import { authorize } from "../middlewares/authorize.middleware";
 
 const router = Router();
 
@@ -55,7 +55,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/UnauthorizedError'
  *       403:
- *         description: Usuario no tiene el rol 'metro_streamer' requerido
+ *         description: Usuario no tiene el rol 'user' requerido
  *         content:
  *           application/json:
  *             schema:
@@ -67,14 +67,14 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/", authenticate, authorize("metro_streamer"), createStream);
-
+//router.post("/", authenticate, authorize("user"), createStream);
+router.post("/", authenticate, createStream);
 /**
  * @swagger
  * /api/streams:
  *   get:
  *     summary: Obtener todos los streams activos
- *     description: Retorna una lista de todos los streams que están actualmente en estado 'active'. Requiere autenticación y rol 'metro_streamer'.
+ *     description: Retorna una lista de todos los streams que están actualmente en estado 'active'. Requiere autenticación y rol 'user'.
  *     tags:
  *       - Streams
  *     security:
@@ -111,7 +111,7 @@ router.post("/", authenticate, authorize("metro_streamer"), createStream);
  *             schema:
  *               $ref: '#/components/schemas/UnauthorizedError'
  *       403:
- *         description: Usuario no tiene el rol 'metro_streamer' requerido
+ *         description: Usuario no tiene el rol 'user' requerido
  *         content:
  *           application/json:
  *             schema:
