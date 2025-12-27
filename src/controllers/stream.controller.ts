@@ -11,36 +11,28 @@ export const createStream = async (req: AuthenticatedRequest, res: Response) => 
     const user_id = req.user.id;
     const { title } = req.body;
 
-    let stream = await prisma.stream.findFirst({
-      where: { userId: user_id },
+    // SIEMPRE crear un nuevo stream en Cloudflare
+    // Cada live debe tener su propio stream único
+    console.log(`🎥 Creando nuevo stream para usuario: ${user_id}`);
+    const data = await createLiveInput(user_id);
+
+    const stream = await prisma.stream.create({
+      data: {
+        uid: data.result.uid,
+        title: title || "Mi Transmisión",
+        userId: user_id,
+        status: data.result.status ?? "offline",
+        preferLowLatency: data.result.preferLowLatency,
+        deleteRecordingAfterDays: data.result.deleteRecordingAfterDays,
+        recordingMode: data.result.recording.mode,
+        webRTCUrl: data.result.webRTC.url,
+        webRTCPlaybackUrl: data.result.webRTCPlayback.url,
+        displayName: req.user.displayName,
+        metroUsername: req.user.metroUsername,
+      },
     });
 
-    if (!stream) {
-      // Crear nuevo stream
-      const data = await createLiveInput(user_id);
-
-      stream = await prisma.stream.create({
-        data: {
-          uid: data.result.uid,
-          title: title || "Mi Transmisión",
-          userId: user_id,
-          status: data.result.status ?? "offline",
-          preferLowLatency: data.result.preferLowLatency,
-          deleteRecordingAfterDays: data.result.deleteRecordingAfterDays,
-          recordingMode: data.result.recording.mode,
-          webRTCUrl: data.result.webRTC.url,
-          webRTCPlaybackUrl: data.result.webRTCPlayback.url,
-          displayName: req.user.displayName,
-          metroUsername: req.user.metroUsername,
-        },
-      });
-    } else if (title) {
-      // Actualizar título si se proporciona uno nuevo
-      stream = await prisma.stream.update({
-        where: { uid: stream.uid },
-        data: { title },
-      });
-    }
+    console.log(`✅ Stream creado: ${stream.uid}`);
 
     res.json({
       message: "Stream listo para transmitir",
