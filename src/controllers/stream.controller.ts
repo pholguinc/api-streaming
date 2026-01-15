@@ -15,9 +15,20 @@ export const createStream = async (req: AuthenticatedRequest, res: Response) => 
       where: { userId: user_id },
     });
 
+    // Variables para credenciales RTMP
+    let rtmpUrl: string | null = null;
+    let rtmpStreamKey: string | null = null;
+
     if (!stream) {
       // Crear nuevo stream
       const data = await createLiveInput(user_id);
+
+      // Extraer credenciales RTMP de Cloudflare (para OBS)
+      const rtmpData = data.result.rtmps || data.result.rtmp || {};
+      rtmpUrl = rtmpData.url || null;
+      rtmpStreamKey = rtmpData.streamKey || null;
+
+      console.log("📡 Cloudflare RTMP data:", { rtmpUrl, rtmpStreamKey: rtmpStreamKey ? "***" : null });
 
       stream = await prisma.stream.create({
         data: {
@@ -34,12 +45,20 @@ export const createStream = async (req: AuthenticatedRequest, res: Response) => 
           metroUsername: req.user.metroUsername,
         },
       });
-    } else if (title) {
-      // Actualizar título si se proporciona uno nuevo
-      stream = await prisma.stream.update({
-        where: { uid: stream.uid },
-        data: { title },
-      });
+    } else {
+      // Stream ya existe, obtener credenciales RTMP de Cloudflare
+      const data = await getLiveInputByUid(stream.uid);
+      const rtmpData = data.result?.rtmps || data.result?.rtmp || {};
+      rtmpUrl = rtmpData.url || null;
+      rtmpStreamKey = rtmpData.streamKey || null;
+
+      if (title) {
+        // Actualizar título si se proporciona uno nuevo
+        stream = await prisma.stream.update({
+          where: { uid: stream.uid },
+          data: { title },
+        });
+      }
     }
 
     res.json({
@@ -48,7 +67,12 @@ export const createStream = async (req: AuthenticatedRequest, res: Response) => 
       title: stream.title,
       username: req.user.metroUsername,
       WebRTC: stream.webRTCUrl,
-      WebRTCPlayback: stream.webRTCPlaybackUrl
+      WebRTCPlayback: stream.webRTCPlaybackUrl,
+      // Credenciales para OBS (Servidor y Clave de Retransmisión)
+      rtmp: {
+        server: rtmpUrl,
+        streamKey: rtmpStreamKey
+      }
     });
   } catch (error: any) {
     console.error("=== ERROR CREANDO TRANSMISIÓN ===");
