@@ -16,6 +16,11 @@ export const createStream = async (req: AuthenticatedRequest, res: Response) => 
     console.log(`🎥 Creando nuevo stream para usuario: ${user_id}`);
     const data = await createLiveInput(user_id);
 
+    // Extraer credenciales RTMPS de Cloudflare (para OBS)
+    const rtmpsUrl = data.result.rtmps?.url || null;
+    const rtmpsStreamKey = data.result.rtmps?.streamKey || null;
+    console.log("📡 Cloudflare RTMPS:", { rtmpsUrl, streamKey: rtmpsStreamKey ? "***" : null });
+
     const stream = await prisma.stream.create({
       data: {
         uid: data.result.uid,
@@ -27,6 +32,8 @@ export const createStream = async (req: AuthenticatedRequest, res: Response) => 
         recordingMode: data.result.recording.mode,
         webRTCUrl: data.result.webRTC.url,
         webRTCPlaybackUrl: data.result.webRTCPlayback.url,
+        rtmpsUrl: rtmpsUrl,
+        rtmpsStreamKey: rtmpsStreamKey,
         displayName: req.user.displayName,
         metroUsername: req.user.metroUsername,
       },
@@ -40,7 +47,10 @@ export const createStream = async (req: AuthenticatedRequest, res: Response) => 
       title: stream.title,
       username: req.user.metroUsername,
       WebRTC: stream.webRTCUrl,
-      WebRTCPlayback: stream.webRTCPlaybackUrl
+      WebRTCPlayback: stream.webRTCPlaybackUrl,
+      // Credenciales para OBS
+      rtmpsServer: rtmpsUrl,
+      rtmpsStreamKey: rtmpsStreamKey
     });
   } catch (error: any) {
     console.error("=== ERROR CREANDO TRANSMISIÓN ===");
