@@ -4,25 +4,82 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model Stream {
-  uid                     String   @id
-  title                   String
-  userId                  String
-  status                  String?  @default("offline")
-  preferLowLatency        Boolean  @default(true)
-  deleteRecordingAfterDays Int?    @default(30)
-  recordingMode           String?  // automatic, manual, etc.
-  webRTCUrl               String?  // URL de publicación WebRTC
-  webRTCPlaybackUrl       String?  // URL de reproducción WebRTC
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
-  
-  // Información del streamer
-  displayName             String?  // displayName del streamer
-  metroUsername           String?  // metroUsername del streamer
+  uid                      String   @id
+  title                    String
+  userId                   String
+  status                   String?  @default("offline")
+  preferLowLatency         Boolean  @default(true)
+  deleteRecordingAfterDays Int?     @default(30)
+  recordingMode            String?
+  webRTCUrl                String?
+  webRTCPlaybackUrl        String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  displayName              String?
+  metroUsername            String?
+  rtmpsUrl                 String?  @db.VarChar(500)
+  rtmpsStreamKey           String?  @db.VarChar(500)
+}
+
+model products {
+  id             String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  sku            String    @unique(map: "sku") @db.VarChar(50)
+  name           String    @db.VarChar(100)
+  description    String?   @db.Text
+  price_amount   BigInt
+  price_currency String    @db.VarChar(10)
+  reward_amount  BigInt?
+  category       String    @db.VarChar(50)
+  image_url      String?   @db.Text
+  is_active      Boolean?  @default(true)
+  created_at     DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model transactions {
+  id                                           String   @id @db.VarChar(36)
+  from_wallet_id                               String?  @db.VarChar(255)
+  to_wallet_id                                 String?  @db.VarChar(255)
+  amount                                       BigInt
+  currency                                     String   @db.VarChar(10)
+  type                                         String   @db.VarChar(50)
+  referenceId                                  String?  @db.VarChar(100)
+  metadata                                     Json?
+  status                                       String   @default("COMPLETED") @db.VarChar(20)
+  createdAt                                    DateTime @default(now()) @db.DateTime(6)
+  wallets_transactions_to_wallet_idTowallets   wallets? @relation("transactions_to_wallet_idTowallets", fields: [to_wallet_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_0ead82990d0099eecec1fa10a29")
+  wallets_transactions_from_wallet_idTowallets wallets? @relation("transactions_from_wallet_idTowallets", fields: [from_wallet_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_c337cc8fd8b43b3e8414f6464ec")
+
+  @@index([to_wallet_id], map: "FK_0ead82990d0099eecec1fa10a29")
+  @@index([from_wallet_id], map: "FK_c337cc8fd8b43b3e8414f6464ec")
+}
+
+model users {
+  email     String?  @unique(map: "IDX_97672ac88f789774dd47f7c8be") @db.VarChar(255)
+  phone     String?  @db.VarChar(20)
+  username  String   @db.VarChar(50)
+  role      String?  @default("USER") @db.VarChar(20)
+  createdAt DateTime @default(now()) @db.DateTime(6)
+  updatedAt DateTime @default(now()) @db.DateTime(6)
+  id        String   @id @db.VarChar(36)
+}
+
+model wallets {
+  id                                                String         @id @db.VarChar(36)
+  userId                                            String         @db.VarChar(255)
+  type                                              String         @db.VarChar(20)
+  currency                                          String         @db.VarChar(10)
+  balance                                           BigInt         @default(0)
+  status                                            String         @default("ACTIVE") @db.VarChar(20)
+  createdAt                                         DateTime       @default(now()) @db.DateTime(6)
+  updatedAt                                         DateTime       @default(now()) @db.DateTime(6)
+  transactions_transactions_to_wallet_idTowallets   transactions[] @relation("transactions_to_wallet_idTowallets")
+  transactions_transactions_from_wallet_idTowallets transactions[] @relation("transactions_from_wallet_idTowallets")
+
+  @@unique([userId, currency], map: "IDX_01627e643864b58b6e6e679414")
 }
