@@ -126,7 +126,7 @@ const options: swaggerJsdoc.Options = {
             },
             title: {
               type: "string",
-              description: "Título actual del stream (actualizado si se proporcionó uno nuevo)",
+              description: "Título actual del stream",
               example: "Mi Primera Transmisión",
             },
             username: {
@@ -136,8 +136,23 @@ const options: swaggerJsdoc.Options = {
             },
             WebRTC: {
               type: "string",
-              description: "URL de WebRTC para transmitir",
-              example: "webrtc://live.cloudflare.com/stream/...",
+              description: "URL de WebRTC para transmitir (alternativa a RTMPS)",
+              example: "https://customer-xxx.cloudflarestream.com/.../webRTC/publish",
+            },
+            WebRTCPlayback: {
+              type: "string",
+              description: "URL para que los viewers vean el stream",
+              example: "https://customer-xxx.cloudflarestream.com/.../webRTC/play",
+            },
+            rtmpsServer: {
+              type: "string",
+              description: "URL del servidor RTMPS para configurar en OBS",
+              example: "rtmps://live.cloudflare.com:443/live/",
+            },
+            rtmpsStreamKey: {
+              type: "string",
+              description: "Clave de retransmisión para OBS",
+              example: "2fb3cb9f17e68a2568d6ebed8d5505ea...",
             },
           },
         },
