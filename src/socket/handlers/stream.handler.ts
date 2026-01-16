@@ -6,11 +6,11 @@ import { prisma } from "../../prisma";
  * Flujo tipo TikTok: Los usuarios ven inmediatamente todos los streams activos al conectar
  */
 export const registerStreamHandler = (socket: AuthenticatedSocket) => {
-  
+
 
   socket.on("start-stream", async (data: any) => {
     try {
-      
+
       // Parsear el JSON si viene como string
       let parsedData;
       if (typeof data === 'string') {
@@ -18,9 +18,9 @@ export const registerStreamHandler = (socket: AuthenticatedSocket) => {
       } else {
         parsedData = data;
       }
-      
+
       const streamUid = parsedData.streamUid;
-      
+
       if (!streamUid) {
         socket.emit("error", { message: "streamUid es requerido" });
         return;
@@ -45,7 +45,7 @@ export const registerStreamHandler = (socket: AuthenticatedSocket) => {
       // SOLO cambiar el estado a ACTIVE y guardar info del streamer
       await prisma.stream.update({
         where: { uid: streamUid },
-        data: { 
+        data: {
           status: "active",
           displayName: socket.user?.displayName,
           metroUsername: socket.user?.metroUsername
@@ -92,9 +92,9 @@ export const registerStreamHandler = (socket: AuthenticatedSocket) => {
       } else {
         parsedData = data;
       }
-      
+
       const streamUid = parsedData.streamUid;
-      
+
       if (!streamUid) {
         socket.emit("error", { message: "streamUid es requerido" });
         return;
@@ -108,9 +108,9 @@ export const registerStreamHandler = (socket: AuthenticatedSocket) => {
       });
 
       if (!stream || stream.userId !== socket.user?.id) {
-        socket.emit("error", { 
+        socket.emit("error", {
           event: "end-stream",
-          message: "No tienes permiso para finalizar este stream" 
+          message: "No tienes permiso para finalizar este stream"
         });
         return;
       }
@@ -132,7 +132,7 @@ export const registerStreamHandler = (socket: AuthenticatedSocket) => {
       delete (socket as any).isBroadcaster;
 
       // Confirmar al cliente en el MISMO evento end-stream
-      socket.emit("end-stream", { 
+      socket.emit("end-stream", {
         success: true,
         streamUid,
         status: "offline",
@@ -148,9 +148,9 @@ export const registerStreamHandler = (socket: AuthenticatedSocket) => {
 
     } catch (error) {
       console.error("❌ Error al finalizar stream:", error);
-      socket.emit("error", { 
+      socket.emit("error", {
         event: "end-stream",
-        message: "Error al finalizar el stream" 
+        message: "Error al finalizar el stream"
       });
     }
   });
@@ -173,6 +173,7 @@ const emitStreamsList = async (socket: AuthenticatedSocket) => {
         userId: true,
         displayName: true,
         metroUsername: true,
+        avatarUrl: true,  // Foto del streamer para mostrar en el frontend
         createdAt: true,
         updatedAt: true
       } as any
@@ -180,11 +181,11 @@ const emitStreamsList = async (socket: AuthenticatedSocket) => {
 
     // Agregar contador de viewers específico a cada stream
     const streamsWithViewers = await Promise.all(
-      activeStreams.map(async (stream) => {
+      activeStreams.map(async (stream: any) => {
         // Contar viewers específicos de este stream (usuarios en la room específica)
         const socketsInStreamRoom = await socket.nsp.in(`stream-${stream.uid}`).fetchSockets();
         const streamSpecificViewers = socketsInStreamRoom.filter((s: any) => !s.isBroadcaster && s.isAutoViewer).length;
-        
+
         return {
           ...stream,
           viewersCount: streamSpecificViewers

@@ -36,6 +36,7 @@ export const createStream = async (req: AuthenticatedRequest, res: Response) => 
         rtmpsStreamKey: rtmpsStreamKey,
         displayName: req.user.displayName,
         metroUsername: req.user.metroUsername,
+        avatarUrl: req.user.avatar || null,  // Foto del streamer
       },
     });
 
