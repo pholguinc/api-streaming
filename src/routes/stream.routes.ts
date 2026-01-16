@@ -125,6 +125,20 @@ router.post("/", authenticate, createStream);
  */
 router.get("/", authenticate, allStreams);
 
+/**
+ * @swagger
+ * /api/streams/public:
+ *   get:
+ *     summary: Obtener streams activos (público, sin autenticación)
+ *     description: Lista todos los streams activos. No requiere autenticación.
+ *     tags:
+ *       - Streams
+ *     responses:
+ *       200:
+ *         description: Lista de streams activos
+ */
+router.get("/public", allStreams);
+
 // router.get("/:uid", getStream);
 // router.delete("/:uid", deleteStream);
 
