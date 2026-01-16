@@ -24,6 +24,7 @@ model Stream {
   metroUsername            String?
   rtmpsUrl                 String?  @db.VarChar(500)
   rtmpsStreamKey           String?  @db.VarChar(500)
+  avatarUrl                String?  @db.VarChar(500)
 }
 
 model products {
