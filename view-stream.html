@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Stream - RTMPS/OBS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section h2 {
+            color: #f5576c;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #f5576c;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab.active {
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+        }
+
+        .player-container {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .player-header {
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-top: 56.25%;
+            background: #111;
+        }
+
+        #videoPlayer,
+        #iframePlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #iframePlayer {
+            border: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .status-bar {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            display: inline-block;
+        }
+
+        .status-connected {
+            background: #4ecca3;
+        }
+
+        .status-disconnected {
+            background: #ff4757;
+        }
+
+        .status-connecting {
+            background: #ffa502;
+            animation: pulse 1s infinite;
+        }
+
+        #logPanel {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+            height: 450px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-header {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px 15px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #log {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.75rem;
+        }
+
+        .log-entry {
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .log-success {
+            color: #4ecca3;
+        }
+
+        .log-error {
+            color: #ff4757;
+        }
+
+        .log-info {
+            color: #70a1ff;
+        }
+
+        .log-warn {
+            color: #ffa502;
+        }
+
+        .log-debug {
+            color: #a29bfe;
+        }
+
+        .info-box {
+            background: rgba(112, 161, 255, 0.15);
+            border: 1px solid #70a1ff;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .info-box strong {
+            color: #70a1ff;
+        }
+
+        .url-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #70a1ff;
+            word-break: break-all;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📺 Visor de Stream - RTMPS/OBS</h1>
+
+        <div class="grid">
+            <div>
+                <!-- Config -->
+                <div class="section">
+                    <h2>⚙️ Configuración</h2>
+                    <label>Stream UID:</label>
+                    <input type="text" id="streamUid" value="2dbd5bc82a3be1433ec4654329a45cfe">
+                    <label>Customer Code:</label>
+                    <input type="text" id="customerCode" value="darffvwmo6kevftj">
+                </div>
+
+                <!-- Método -->
+                <div class="section">
+                    <h2>🎬 Método de Reproducción</h2>
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab('hls')">� HLS (Recomendado)</div>
+                        <div class="tab" onclick="switchTab('iframe')">📺 Iframe</div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn-primary" onclick="startPlayback()">▶️ Reproducir</button>
+                        <button class="btn-secondary" onclick="stopPlayback()">⏹️ Detener</button>
+                        <button class="btn-danger" onclick="clearLog()">🗑️ Log</button>
+                    </div>
+
+                    <div class="info-box">
+                        <strong>ℹ️ Nota:</strong> Streams RTMPS (OBS) tienen 10-30 seg de latencia.<br>
+                        HLS es más estable. Iframe usa el player de Cloudflare.
+                    </div>
+                </div>
+
+                <!-- Player -->
+                <div class="player-container">
+                    <div class="player-header">
+                        <div class="live-dot"></div>
+                        <span>EN VIVO</span>
+                        <span style="margin-left: auto; font-size: 0.8rem;" id="latencyDisplay">-</span>
+                    </div>
+                    <div class="video-wrapper">
+                        <video id="videoPlayer" controls autoplay playsinline muted></video>
+                        <iframe id="iframePlayer" class="hidden"
+                            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+                            allowfullscreen></iframe>
+                    </div>
+                    <div class="status-bar">
+                        <span><span class="status-indicator" id="connectionStatus"></span><span
+                                id="connectionText">Listo</span></span>
+                        <span id="playbackMethod">-</span>
+                    </div>
+                </div>
+
+                <!-- URLs -->
+                <div class="section" style="margin-top: 15px;">
+                    <h2>🔗 URLs para tu app</h2>
+                    <label>HLS Manifest (.m3u8):</label>
+                    <div class="url-display" id="displayHlsUrl">-</div>
+                    <label>Iframe Embed:</label>
+                    <div class="url-display" id="displayIframeUrl">-</div>
+                </div>
+            </div>
+
+            <!-- LOG -->
+            <div>
+                <div id="logPanel">
+                    <div class="log-header">
+                        <span>📋 Log</span>
+                        <span id="logCount">0</span>
+                    </div>
+                    <div id="log"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+    <script>
+        let currentMethod = 'hls';
+        let hlsPlayer = null;
+        let logEntries = 0;
+        let fragmentCount = 0;
+
+        const videoPlayer = document.getElementById('videoPlayer');
+        const iframePlayer = document.getElementById('iframePlayer');
+
+        function getUrls() {
+            const uid = document.getElementById('streamUid').value.trim();
+            const customer = document.getElementById('customerCode').value.trim();
+            const base = `https://customer-${customer}.cloudflarestream.com/${uid}`;
+            return {
+                iframe: `${base}/iframe`,
+                hls: `${base}/manifest/video.m3u8`
+            };
+        }
+
+        function updateUrlDisplay() {
+            const urls = getUrls();
+            document.getElementById('displayIframeUrl').textContent = urls.iframe;
+            document.getElementById('displayHlsUrl').textContent = urls.hls;
+        }
+
+        function switchTab(method) {
+            currentMethod = method;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            log(`Método: ${method.toUpperCase()}`, 'info');
+        }
+
+        function setStatus(status, text) {
+            document.getElementById('connectionStatus').className = `status-indicator status-${status}`;
+            document.getElementById('connectionText').textContent = text;
+        }
+
+        function log(message, type = 'info') {
+            logEntries++;
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString('es', { hour12: false });
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${time}] ${message}`;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+            document.getElementById('logCount').textContent = logEntries;
+
+            // Limitar a 100 entries
+            while (logDiv.children.length > 100) {
+                logDiv.removeChild(logDiv.lastChild);
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            logEntries = 0;
+            fragmentCount = 0;
+            document.getElementById('logCount').textContent = '0';
+        }
+
+        async function startPlayback() {
+            stopPlayback();
+            const urls = getUrls();
+            updateUrlDisplay();
+            fragmentCount = 0;
+
+            log(`Iniciando ${currentMethod.toUpperCase()}...`, 'info');
+            setStatus('connecting', 'Conectando...');
+            document.getElementById('playbackMethod').textContent = currentMethod.toUpperCase();
+
+            if (currentMethod === 'hls') {
+                await playHLS(urls.hls);
+            } else {
+                await playIframe(urls.iframe);
+            }
+        }
+
+        async function playIframe(url) {
+            videoPlayer.classList.add('hidden');
+            iframePlayer.classList.remove('hidden');
+
+            log(`Cargando iframe...`, 'info');
+
+            // Agregar parámetros para evitar auto-play issues
+            const iframeUrl = `${url}?autoplay=true&muted=true`;
+            iframePlayer.src = iframeUrl;
+
+            // No hay forma confiable de detectar cuando el iframe carga el video
+            // Solo confirmamos que el iframe se cargó
+            setTimeout(() => {
+                log('Iframe cargado - el video debería aparecer', 'success');
+                setStatus('connected', 'Iframe');
+                document.getElementById('latencyDisplay').textContent = '~20-30s delay';
+            }, 2000);
+        }
+
+        async function playHLS(url) {
+            iframePlayer.classList.add('hidden');
+            videoPlayer.classList.remove('hidden');
+
+            log(`Cargando HLS...`, 'info');
+            log(`URL: ${url}`, 'debug');
+
+            if (Hls.isSupported()) {
+                hlsPlayer = new Hls({
+                    lowLatencyMode: true,
+                    liveSyncDurationCount: 3,
+                    liveMaxLatencyDurationCount: 6,
+                    maxBufferLength: 15,
+                    maxMaxBufferLength: 30,
+                    // Reducir logs de fragmentos
+                    debug: false
+                });
+
+                hlsPlayer.loadSource(url);
+                hlsPlayer.attachMedia(videoPlayer);
+
+                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, (e, data) => {
+                    log(`✅ Stream detectado: ${data.levels.length} calidad(es)`, 'success');
+                    setStatus('connected', 'Reproduciendo HLS');
+                    videoPlayer.play().catch(e => log(`Click para reproducir`, 'warn'));
+                });
+
+                hlsPlayer.on(Hls.Events.LEVEL_LOADED, (e, data) => {
+                    const latency = Math.round(data.details.totalduration);
+                    document.getElementById('latencyDisplay').textContent = `Buffer: ${latency}s`;
+                });
+
+                hlsPlayer.on(Hls.Events.FRAG_LOADED, (e, data) => {
+                    fragmentCount++;
+                    // Solo log cada 5 fragmentos para no saturar
+                    if (fragmentCount % 5 === 0) {
+                        log(`Fragmentos cargados: ${fragmentCount}`, 'debug');
+                    }
+                });
+
+                hlsPlayer.on(Hls.Events.ERROR, (e, data) => {
+                    if (data.fatal) {
+                        log(`❌ Error fatal: ${data.details}`, 'error');
+                        setStatus('disconnected', 'Error');
+
+                        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                            log('Reintentando en 5s...', 'warn');
+                            setTimeout(() => hlsPlayer.startLoad(), 5000);
+                        }
+                    }
+                });
+
+            } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                log('Usando HLS nativo (Safari)', 'info');
+                videoPlayer.src = url;
+                videoPlayer.play();
+                setStatus('connected', 'HLS Nativo');
+            } else {
+                log('❌ HLS no soportado', 'error');
+            }
+        }
+
+        function stopPlayback() {
+            if (hlsPlayer) {
+                hlsPlayer.destroy();
+                hlsPlayer = null;
+            }
+            videoPlayer.srcObject = null;
+            videoPlayer.src = '';
+            iframePlayer.src = '';
+            setStatus('disconnected', 'Detenido');
+            document.getElementById('latencyDisplay').textContent = '-';
+        }
+
+        // Init
+        document.getElementById('streamUid').addEventListener('input', updateUrlDisplay);
+        document.getElementById('customerCode').addEventListener('input', updateUrlDisplay);
+        updateUrlDisplay();
+        setStatus('disconnected', 'Listo');
+        log('Visor listo - HLS recomendado para streams OBS', 'info');
+    </script>
+</body>
+
+</html>
