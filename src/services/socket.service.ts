@@ -596,41 +596,32 @@ export class SocketService {
 
   /**
    * Maneja desconexión - versión simplificada
+   * NOTA: NO auto-termina streams RTMPS. Solo limpia tracking local.
+   * Los streams solo se terminan cuando el usuario emite end_streaming explícitamente.
    */
   private async handleDisconnect(socket: AuthenticatedSocket): Promise<void> {
     const streamUid = (socket as any).streamUid;
     const isBroadcaster = (socket as any).isBroadcaster;
 
-    // Si era broadcaster, finalizar su stream
+    // Si era broadcaster, solo limpiar tracking pero NO cambiar estado en BD
+    // El stream RTMPS sigue activo en Cloudflare aunque la app se cierre
     if (streamUid && isBroadcaster) {
       console.log(
-        `🛑 STREAMER DESCONECTADO - Finalizando stream: ${streamUid} | Usuario: ${socket.user?.displayName}`
+        `⚠️ STREAMER DESCONECTADO (socket cerrado) - Stream: ${streamUid} | Usuario: ${socket.user?.displayName}`
       );
+      console.log(`ℹ️ Stream RTMPS sigue activo en Cloudflare. NO se marca como offline.`);
+      console.log(`ℹ️ El usuario debe emitir end_streaming para terminar el stream.`);
 
       try {
-        // Remover del tracking de heartbeat
+        // Solo remover del tracking local, NO cambiar estado en BD
         this.unregisterActiveStreamer(streamUid);
 
-        // ✅ CAMBIAR ESTADO EN BD AUTOMÁTICAMENTE
-        await prisma.stream.update({
-          where: { uid: streamUid },
-          data: { status: "offline" },
-        });
-        console.log(`✅ BD actualizada: Stream ${streamUid} marcado como offline`);
+        // NO emitir stream_ended - el stream sigue activo
+        // NO cambiar status en BD - el stream sigue activo en Cloudflare
 
-        // Notificar a todos los viewers
-        this.io.emit("stream_ended", {
-          streamUid,
-          message: `Stream finalizado: ${socket.user?.displayName} perdió la conexión`,
-          reason: "tcp_disconnection"
-        });
-        console.log(`📢 Notificación enviada a todos los viewers sobre stream terminado`);
-
-        // ✅ ACTUALIZAR LISTA DE STREAMS DESPUÉS DE TERMINAR STREAM
-        console.log(`🔍 DEBUG: Llamando scheduleBroadcastUpdate desde streamer disconnect`);
-        this.scheduleBroadcastUpdate();
+        console.log(`� Tracking local limpiado. Stream ${streamUid} sigue ACTIVO en BD.`);
       } catch (error) {
-        console.error("❌ Error al finalizar stream en disconnect:", error);
+        console.error("❌ Error al limpiar tracking en disconnect:", error);
       }
     }
 
@@ -709,7 +700,7 @@ export class SocketService {
 
       // Agregar contador REAL de viewers y avatar del streamer
       const streamsWithViewers = await Promise.all(
-        activeStreams.map(async (stream) => {
+        activeStreams.map(async (stream: typeof activeStreams[number]) => {
           const socketsInRoom = await this.io
             .in(`stream-${stream.uid}`)
             .fetchSockets();
@@ -780,7 +771,7 @@ export class SocketService {
 
       // Agregar contador de viewers específico y avatar del streamer
       const streamsWithViewers = await Promise.all(
-        activeStreams.map(async (stream) => {
+        activeStreams.map(async (stream: typeof activeStreams[number]) => {
           // Contar viewers específicos de este stream (usuarios en la room específica)
           const socketsInStreamRoom = await this.io
             .in(`stream-${stream.uid}`)
