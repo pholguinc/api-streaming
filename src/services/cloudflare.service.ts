@@ -22,7 +22,10 @@ const api = axios.create({
 export const createLiveInput = async (name: string) => {
   const res = await api.post(liveInputsURL, {
     meta: { name },
-    recording: { mode: "automatic" },
+    recording: {
+      mode: "automatic",
+      timeshift: true  // Habilita DVR para que espectadores puedan rebobinar y ver desde el inicio
+    },
     deleteRecordingAfterDays: 30,
     preferLowLatency: true,
   });
